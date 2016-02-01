@@ -1,0 +1,6 @@
+/usr/local/Cellar/pcl/1.7.2/pcl_viewer.app/Contents/MacOS/pcl_viewer -normals 1 -normals_scale 1 gold3-4-19_b.out*.pcd 
+
+
+altre note:
+
+http://pointclouds.org/documentation/tutorials/normal_estimation.php

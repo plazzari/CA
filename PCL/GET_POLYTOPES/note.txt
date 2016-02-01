@@ -1,0 +1,23 @@
+Report:
+
+- CA Name
+
+- CA Volume
+
+- CA Surface
+
+- Python creates a type for each face
+    * number of points for each face;
+      (number of points from one side
+       or the other of the plane)
+    * number of sides;
+    * number of vertex;
+    * average normal to the face.
+
+- Construction of incidence matrix
+
+- Save picture with pcl viewer to create a web page
+
+
+REF
+http://www.pointclouds.org/documentation/tutorials/cluster_extraction.php
