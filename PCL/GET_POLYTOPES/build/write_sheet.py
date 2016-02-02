@@ -5,6 +5,7 @@ import glob
 import numpy  as np
 import random
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 def dist(x,y):   
     return np.sqrt(np.sum((x-y)**2))    
@@ -87,9 +88,18 @@ def main(argv):
                         IM[i,j]=1
 
     masked_array = np.ma.masked_invalid(IM)
-
-#   plt.subplot(2,1,1)
-#   plt.pcolormesh(masked_array.T, cmap = 'RdBu', edgecolors = 'None')
+    fig=plt.figure(figsize=(10, 10))
+    gs = gridspec.GridSpec(2, 1,
+                       width_ratios=[1,1],
+                       height_ratios=[1,5]
+                       )
+    gs.update(wspace = 0, hspace = 0,bottom=0.42)
+    ax1=plt.subplot(gs[0])
+    ax1.bar(np.arange(0,30),face_np_list[0:30], alpha=0.4, color='black')
+    ax1.set_xlim((0, 30))
+    ax1.axis('off')
+    ax1.set_xticklabels(())
+    ax1.set_yticklabels(())
  
 
 # Constructing incidence matrix extended
@@ -109,11 +119,10 @@ def main(argv):
 
 
     masked_array = np.ma.masked_invalid(IME)
-    fig=plt.figure()
-    plt.subplot(1,1,1)
+    plt.subplot(gs[1])
     plt.pcolormesh(masked_array.T, cmap = 'RdBu', edgecolors = 'None')
-    plt.colorbar()
-#   plt.show()
+#   plt.colorbar()
+    plt.gca().set_aspect('equal')
     theOutputFile= "PICTURES/" + inputfile + ".png"
     fig.savefig(theOutputFile)
 
