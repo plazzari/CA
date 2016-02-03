@@ -16,6 +16,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
 int
 main (int argc, char** argv)
@@ -200,14 +201,14 @@ main (int argc, char** argv)
 
 // write pcd file for the specific face
       std::stringstream ss;
-      ss << argv[3] << ij << ".pcd";
+      ss << argv[3] << std::setfill('0') << std::setw(5) << ij << ".pcd";
       pcl::io::savePCDFile(ss.str (), *cloud_with_normals_cluster, false);	
 
 // write ascii file for the plane face
 
       std::stringstream ss1;
       std::ofstream myfile;
-      ss1 << argv[3] << ij << ".coeff.txt";
+      ss1 << argv[3] << std::setfill('0') << std::setw(5) << ij << ".coeff.txt";
       std:: string fileName = ss1.str();
 
       myfile.open(fileName.c_str());

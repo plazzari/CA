@@ -6,6 +6,7 @@ import numpy  as np
 import random
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 
 def dist(x,y):   
     return np.sqrt(np.sum((x-y)**2))    
@@ -73,6 +74,9 @@ def main(argv):
     aux = [ face_point_list[i] for i in seq]; face_point_list=list(aux)
     aux = [ face_normal_list[i] for i in seq];face_normal_list=list(aux)
     
+    print seq[0:30]
+    print face_np_list[0:30]
+  
     nn=min(30,len(face_np_list)) 
 
 # Constructing incidence matrix
@@ -123,6 +127,12 @@ def main(argv):
     plt.pcolormesh(masked_array.T, cmap = 'RdBu', edgecolors = 'None')
 #   plt.colorbar()
     plt.gca().set_aspect('equal')
+    xtickl=[]
+    for i in seq:
+       xtickl.append(str(i))
+    plt.gca().xaxis.set_ticks(np.arange(0.5, 30.5,1))
+    plt.tick_params(length=0)
+    plt.gca().set_xticklabels(xtickl,fontsize=8,rotation=90)
     theOutputFile= "PICTURES/" + inputfile + ".png"
     fig.savefig(theOutputFile)
 
