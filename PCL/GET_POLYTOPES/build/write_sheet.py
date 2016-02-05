@@ -7,6 +7,7 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
+import seaborn as sns
 
 def dist(x,y):   
     return np.sqrt(np.sum((x-y)**2))    
@@ -52,7 +53,8 @@ def main(argv):
             outputfile = arg
     print 'Input file is "', inputfile
     print 'Output file is "', outputfile
-
+    
+    sns.set()
     face_np_list =[]
     face_point_list =[]
     face_normal_list=[]
@@ -124,13 +126,16 @@ def main(argv):
 
     masked_array = np.ma.masked_invalid(IME)
     plt.subplot(gs[1])
-    plt.pcolormesh(masked_array.T, cmap = 'RdBu', edgecolors = 'None')
+#   plt.pcolormesh(masked_array.T, cmap = 'RdBu', edgecolors = 'None')
+    sns.heatmap(np.flipud(IME),cbar=False,annot=True, fmt=".0f",annot_kws={"size": 6})
+#   sns.heatmap(np.flipud(masked_array.T),cbar=False,yticklabels=False,annot=True, fmt="f",annot_kws={"size": 5})
 #   plt.colorbar()
     plt.gca().set_aspect('equal')
     xtickl=[]
     for i in seq:
        xtickl.append(str(i))
     plt.gca().xaxis.set_ticks(np.arange(0.5, 30.5,1))
+    plt.gca().set_yticklabels(())
     plt.tick_params(length=0)
     plt.gca().set_xticklabels(xtickl,fontsize=8,rotation=90)
     theOutputFile= "PICTURES/" + inputfile + ".png"
