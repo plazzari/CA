@@ -8,8 +8,25 @@ INTEGER, allocatable, dimension(:,:)  :: vNN   ! matrix of vectorized near neigh
 
 
 contains
-!--------Von Neumann----------!
-subroutine compute_Von_neumann()
+!--------von Neumann----------!
+!     ________________________________
+!     |     |     |     |     |     |
+!     |     |     |     |     |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
+!     |     |     |  1  |     |     |      -1,1 --> Near Neighbour
+!     |_____|_____|_____|_____|_____|__       O --> Site considered
+!     |     |     |     |     |     |
+!     |     | -1  |  O  |  1  |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
+!     |     |     | -1  |     |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
+!     |     |     |     |     |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
+subroutine compute_von_Neumann()
 !Local variables
 
    implicit none
@@ -35,8 +52,24 @@ subroutine compute_Von_neumann()
 
 end subroutine
 !---------Moore---------------!
+!     ________________________________
+!     |     |     |     |     |     |       (-1,-1)  --> 1 Near Neighbour
+!     |     |     |     |     |     |       (-1, 0)  --> 2 Near Neighbour
+!     |_____|_____|_____|_____|_____|__     (-1, 1)  --> 3 Near Neighbour
+!     |     |     |     |     |     |       ( 0,-1)  --> 4 Near Neighbour
+!     |     |  6  |  7  |  8  |     |       ( 0, 0)  --> O Site considered
+!     |_____|_____|_____|_____|_____|__     ( 0, 1)  --> 5 Near Neighbour
+!     |     |     |     |     |     |       ( 1,-1)  --> 6 Near Neighbour
+!     |     |  4  |  O  |  5  |     |       ( 1, 0)  --> 7 Near Neighbour
+!     |_____|_____|_____|_____|_____|__     ( 1, 1)  --> 8 Near Neighbour
+!     |     |     |     |     |     |
+!     |     |  1  |  2  |  3  |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
+!     |     |     |     |     |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
 subroutine compute_Moore()
-
    implicit none
 !Local variables
    INTEGER                   :: i,j,a,res,NNMo
@@ -66,9 +99,28 @@ subroutine compute_Moore()
    ENDDO
 
 end subroutine
-!---------Honey_Comb----------!
-subroutine compute_Honey_Comb()
-
+!---------Honeycomb----------!
+subroutine compute_Honeycomb()
+!     ________________________________
+!     |     |     |     |     |     |
+!     |     |     |     |     |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
+!     |     |     |  2  |  3  |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |       1     --> Site considered
+!     |     |  7  |  1  |  4  |     |       [2,7] --> Near Neighbour
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
+!     |     |  6  |  5  |     |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
+!     |     |     |     |     |     |
+!     |_____|_____|_____|_____|_____|__
+!     |     |     |     |     |     |
+! Scheme from Libbrecht K. G. Physically Derived Rules for Simulating
+! Faceted Crystal Growth using Cellular Automata pg.16
+! http://arxiv.org/pdf/0807.2616v1.pdf
    implicit none
 !Local variables
    INTEGER                   :: i,j,a,res
@@ -77,10 +129,6 @@ subroutine compute_Honey_Comb()
    if (D .LT. 2) then
        STOP
    endif
-
-! Scheme from Libbrecht K. G. Physically Derived Rules for Simulating
-! Faceted Crystal Growth using Cellular Automata pg.16 
-! http://arxiv.org/pdf/0807.2616v1.pdf
 
    NNHC=6 + 2*(D-2)   ! Honey_Comb
    moveHC(1,1)= 0; moveHC(1,2)= 1 ! Position --> 2

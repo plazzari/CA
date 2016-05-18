@@ -8,9 +8,9 @@ INTEGER                   :: i,j
 
 call global_allocate()
 
-! call compute_Von_neumann()
+  call compute_von_Neumann()
 ! call compute_Moore()
-  call compute_Honey_Comb()
+! call compute_Honeycomb()
 
    DO i=1,S
     write(*,*) 'point=',i, 'NNidx',vNN(i,:)
