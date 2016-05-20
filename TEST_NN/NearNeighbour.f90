@@ -3,7 +3,7 @@ USE GlobalMem
 
 implicit none
 
-INTEGER :: NNvN,NNMo,NNHC 
+INTEGER :: NNvN,NNMo,NNHC,NNFCC
 INTEGER, allocatable, dimension(:,:)  :: vNN   ! matrix of vectorized near neigh...
 
 
@@ -38,10 +38,6 @@ subroutine compute_von_Neumann()
 
    allocate(vNN(S,NNvN))
     
-   FORALL (i=1:S) v(i) = i
-
-   m=UNPACK(v,m==m,m) ! D-dimensional matrix of indexes
-
 ! Start computing V.N. Near Neigh D-dimensional case
    j=1
    DO i=1,D
@@ -78,11 +74,7 @@ subroutine compute_Moore()
    NNMo=3**D-1   ! Moore 
 
    allocate(vNN(S,NNMo))
-      
-   FORALL (i=1:S) v(i) = i
 
-   m=UNPACK(v,m==m,m) ! D-dimensional matrix of indexes
-   
    a = 0
    DO i=1,NNMo
      res=CodeBase(REAL(i-1+a,4),3,move)
@@ -100,7 +92,6 @@ subroutine compute_Moore()
 
 end subroutine
 !---------Honeycomb----------!
-subroutine compute_Honeycomb()
 !     ________________________________
 !     |     |     |     |     |     |
 !     |     |     |     |     |     |
@@ -121,16 +112,16 @@ subroutine compute_Honeycomb()
 ! Scheme from Libbrecht K. G. Physically Derived Rules for Simulating
 ! Faceted Crystal Growth using Cellular Automata pg.16
 ! http://arxiv.org/pdf/0807.2616v1.pdf
+subroutine compute_Honeycomb()
    implicit none
 !Local variables
    INTEGER                   :: i,j,a,res
    INTEGER,DIMENSION(6,2)    :: moveHC
 
-   if (D .LT. 2) then
-       STOP
-   endif
+   if (D .LT. 2) STOP 'Honeycomb requires dimension > 1'
 
-   NNHC=6 + 2*(D-2)   ! Honey_Comb
+   NNHC=6 + 2*(D-2)   ! Honeycomb
+
    moveHC(1,1)= 0; moveHC(1,2)= 1 ! Position --> 2
    moveHC(2,1)= 1; moveHC(2,2)= 1 ! Position --> 3
    moveHC(3,1)= 1; moveHC(3,2)= 0 ! Position --> 4
@@ -158,8 +149,73 @@ subroutine compute_Honeycomb()
    ENDDO
 
 end subroutine
+!---------FCC-----------------!
+subroutine compute_FCC()
+   implicit none
+!Local variables
+   INTEGER                             :: i,j,a,res
+   INTEGER,allocatable, DIMENSION(:,:) :: moveFCC
 
+   NNFCC = D*(2*(D-1))
+
+   allocate(moveFCC(NNFCC,D))
+   allocate(vNN(S,NNFCC))
+
+   call CodeBaseFCC(moveFCC)
+
+   DO i=1, NNFCC
+     n=m
+     Do j=1,D
+       n=EOSHIFT(n,SHIFT= moveFCC(i,j),BOUNDARY=0,DIM=j)
+     ENDDO
+     vNN(:,i) =PACK(n,m>0)
+   ENDDO
+
+end subroutine
 !-----------------------------!
+subroutine CodeBaseFCC(moveFCC)
+implicit none
+INTEGER                    :: i,j,res
+INTEGER,DIMENSION(D)       :: move
+INTEGER,DIMENSION(NNFCC,D) :: moveFCC
+   j=0
+   DO i=0,3**D-1
+
+      res=CodeBase(REAL(i,4),3,move)
+
+!     write(*,*) 'moveA', i, move
+      if (CheckMoveFCC(move)) then
+         j=j+1
+         moveFCC(j,:)=move
+!        write(*,*) 'moveB',i,  move
+      endif
+
+   ENDDO
+
+if (j .NE. NNFCC) STOP 'Problem in computing FCC near neighbours'
+
+return
+end subroutine
+
+logical Function CheckMoveFCC(move)
+implicit none
+INTEGER                   :: i,a,b
+INTEGER,DIMENSION(D)      :: move
+a = 0
+b = 0
+CheckMoveFCC = .FALSE.
+
+do i=1,D
+     if ( move(i) .EQ. -1) a = a +1
+     if ( move(i) .EQ.  1) b = b +1
+enddo
+
+if (( a .EQ. 1) .AND. ( b .EQ. 1)  ) CheckMoveFCC = .TRUE.
+if (( a .EQ. 2) .AND. ( b .EQ. 0)  ) CheckMoveFCC = .TRUE.
+if (( a .EQ. 0) .AND. ( b .EQ. 2)  ) CheckMoveFCC = .TRUE.
+
+return
+end
 
 !Convert a number from base 10 to base b. The function returns
 !FALSE if b not in [2..36] or if string x contains invalid
