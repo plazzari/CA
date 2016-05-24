@@ -7,7 +7,7 @@ import sys
 
 cDD = int(sys.argv[1])
 
-varLIST=['m','n']
+varLIST=['CA_dom%m','CA_dom%n']
 
 size = 'L'
 

@@ -3,10 +3,6 @@ USE GlobalMem
 
 implicit none
 
-INTEGER :: NNvN,NNMo,NNHC,NNFCC
-INTEGER, allocatable, dimension(:,:)  :: vNN   ! matrix of vectorized near neigh...
-
-
 contains
 !--------von Neumann----------!
 !     ________________________________
@@ -26,25 +22,23 @@ contains
 !     |     |     |     |     |     |
 !     |_____|_____|_____|_____|_____|__
 !     |     |     |     |     |     |
-subroutine compute_von_Neumann()
-!Local variables
-
+subroutine compute_von_Neumann(CA_dom)
    implicit none
-
+type(domain)                       :: CA_dom
+!Local variables
    INTEGER                   :: i,j
+   INTEGER                   :: NNvN
 
-   NNvN=2*D      ! von Neumann
+   CA_dom%NN=2*CA_dom%D      ! von Neumann
 
 
-   allocate(vNN(S,NNvN))
+   allocate(CA_dom%vNN(CA_dom%S,CA_dom%NN))
     
-! Start computing V.N. Near Neigh D-dimensional case
    j=1
-   DO i=1,D
-     n=EOSHIFT(m,SHIFT= 1,BOUNDARY=0,DIM=i) ;vNN(:,j) =PACK(n,n==n) ; j=j+1
-     n=EOSHIFT(m,SHIFT=-1,BOUNDARY=0,DIM=i) ;vNN(:,j) =PACK(n,n==n) ; j=j+1
+   DO i=1,CA_dom%D
+     CA_dom%n=EOSHIFT(CA_dom%m,SHIFT= 1,BOUNDARY=0,DIM=i) ;CA_dom%vNN(:,j) =PACK(CA_dom%n,CA_dom%n==CA_dom%n) ; j=j+1
+     CA_dom%n=EOSHIFT(CA_dom%m,SHIFT=-1,BOUNDARY=0,DIM=i) ;CA_dom%vNN(:,j) =PACK(CA_dom%n,CA_dom%n==CA_dom%n) ; j=j+1
    ENDDO
-! End 
 
 end subroutine
 !---------Moore---------------!
@@ -65,29 +59,30 @@ end subroutine
 !     |     |     |     |     |     |
 !     |_____|_____|_____|_____|_____|__
 !     |     |     |     |     |     |
-subroutine compute_Moore()
+subroutine compute_Moore(CA_dom)
    implicit none
+type(domain)                       :: CA_dom
 !Local variables
-   INTEGER                   :: i,j,a,res,NNMo
-   INTEGER,DIMENSION(D)      :: move                      
+   INTEGER                          :: i,j,a,res,NNMo
+   INTEGER,DIMENSION(CA_dom%D)      :: move                      
 
-   NNMo=3**D-1   ! Moore 
+   CA_dom%NN=3**CA_dom%D-1   ! Moore 
 
-   allocate(vNN(S,NNMo))
+   allocate(CA_dom%vNN(CA_dom%S,CA_dom%NN))
 
    a = 0
-   DO i=1,NNMo
-     res=CodeBase(REAL(i-1+a,4),3,move)
+   DO i=1,CA_dom%NN
+     res=CodeBase(REAL(i-1+a,4),3,move,CA_dom%D)
      if (res .EQ. 0) then
        a = 1
-       res=CodeBase(REAL(i-1+a,4),3,move)
+       res=CodeBase(REAL(i-1+a,4),3,move,CA_dom%D)
      endif
      write(*,*) 'move-->', move
-     n=m
-     Do j=1,D
-       n=EOSHIFT(n,SHIFT= move(j),BOUNDARY=0,DIM=j)
+     CA_dom%n=CA_dom%m
+     Do j=1,CA_dom%D
+       CA_dom%n=EOSHIFT(CA_dom%n,SHIFT= move(j),BOUNDARY=0,DIM=j)
      ENDDO
-     vNN(:,i) =PACK(n,n==n)
+     CA_dom%vNN(:,i) =PACK(CA_dom%n,CA_dom%n==CA_dom%n)
    ENDDO
 
 end subroutine
@@ -112,15 +107,16 @@ end subroutine
 ! Scheme from Libbrecht K. G. Physically Derived Rules for Simulating
 ! Faceted Crystal Growth using Cellular Automata pg.16
 ! http://arxiv.org/pdf/0807.2616v1.pdf
-subroutine compute_Honeycomb()
+subroutine compute_Honeycomb(CA_dom)
    implicit none
+type(domain)                       :: CA_dom
 !Local variables
    INTEGER                   :: i,j,a,res
    INTEGER,DIMENSION(6,2)    :: moveHC
 
-   if (D .LT. 2) STOP 'Honeycomb requires dimension > 1'
+   if (CA_dom%D .LT. 2) STOP 'Honeycomb requires dimension > 1'
 
-   NNHC=6 + 2*(D-2)   ! Honeycomb
+   CA_dom%NN=6 + 2*(CA_dom%D-2)   ! Honeycomb
 
    moveHC(1,1)= 0; moveHC(1,2)= 1 ! Position --> 2
    moveHC(2,1)= 1; moveHC(2,2)= 1 ! Position --> 3
@@ -129,62 +125,65 @@ subroutine compute_Honeycomb()
    moveHC(5,1)=-1; moveHC(5,2)=-1 ! Position --> 6
    moveHC(6,1)=-1; moveHC(6,2)= 0 ! Position --> 7
 
-   allocate(vNN(S,NNHC))
+   allocate(CA_dom%vNN(CA_dom%S,CA_dom%NN))
       
-   FORALL (i=1:S) v(i) = i
+   FORALL (i=1:CA_dom%S) CA_dom%v(i) = i
 
-   m=UNPACK(v,m==m,m) ! D-dimensional matrix of indexes
-   n=m
+   CA_dom%m=UNPACK(CA_dom%v,CA_dom%m==CA_dom%m,CA_dom%m) ! D-dimensional matrix of indexes
+   CA_dom%n=CA_dom%m
    DO i=1,6
-     n=EOSHIFT(n,SHIFT= moveHC(i,1),BOUNDARY=0,DIM=1)
-     n=EOSHIFT(n,SHIFT= moveHC(i,2),BOUNDARY=0,DIM=2)
-     vNN(:,i) =PACK(n,n==n)
-     n=m
+     CA_dom%n=EOSHIFT(CA_dom%n,SHIFT= moveHC(i,1),BOUNDARY=0,DIM=1)
+     CA_dom%n=EOSHIFT(CA_dom%n,SHIFT= moveHC(i,2),BOUNDARY=0,DIM=2)
+     CA_dom%vNN(:,i) =PACK(CA_dom%n,CA_dom%n==CA_dom%n)
+     CA_dom%n=CA_dom%m
    ENDDO
 
    j=7
-   DO i=3,D
-     n=EOSHIFT(m,SHIFT= 1,BOUNDARY=0,DIM=i) ;vNN(:,j) =PACK(n,n==n) ; j=j+1
-     n=EOSHIFT(m,SHIFT=-1,BOUNDARY=0,DIM=i) ;vNN(:,j) =PACK(n,n==n) ; j=j+1
+   DO i=3,CA_dom%D
+     CA_dom%n=EOSHIFT(CA_dom%m,SHIFT= 1,BOUNDARY=0,DIM=i) ;CA_dom%vNN(:,j) =PACK(CA_dom%n,CA_dom%n==CA_dom%n) ; j=j+1
+     CA_dom%n=EOSHIFT(CA_dom%m,SHIFT=-1,BOUNDARY=0,DIM=i) ;CA_dom%vNN(:,j) =PACK(CA_dom%n,CA_dom%n==CA_dom%n) ; j=j+1
    ENDDO
 
 end subroutine
 !---------FCC-----------------!
-subroutine compute_FCC()
+subroutine compute_FCC(CA_dom)
    implicit none
+   type(domain)                       :: CA_dom
 !Local variables
    INTEGER                             :: i,j,a,res
    INTEGER,allocatable, DIMENSION(:,:) :: moveFCC
 
-   NNFCC = D*(2*(D-1))
+   CA_dom%NN = CA_dom%D*(2*(CA_dom%D-1)) ! FCC Nearneighbours
 
-   allocate(moveFCC(NNFCC,D))
-   allocate(vNN(S,NNFCC))
+   allocate(moveFCC(CA_dom%NN,CA_dom%D))
+   allocate(CA_dom%vNN(CA_dom%S,CA_dom%NN))
 
-   call CodeBaseFCC(moveFCC)
+   call CodeBaseFCC(moveFCC,CA_dom%D,CA_dom%NN)
 
-   DO i=1, NNFCC
-     n=m
-     Do j=1,D
-       n=EOSHIFT(n,SHIFT= moveFCC(i,j),BOUNDARY=0,DIM=j)
+   DO i=1, CA_dom%NN
+     CA_dom%n=CA_dom%m
+     Do j=1,CA_dom%D
+       CA_dom%n=EOSHIFT(CA_dom%n,SHIFT= moveFCC(i,j),BOUNDARY=0,DIM=j)
      ENDDO
-     vNN(:,i) =PACK(n,m>0)
+     CA_dom%vNN(:,i) =PACK(CA_dom%n,CA_dom%m>0)
    ENDDO
 
+   deallocate(moveFCC)
 end subroutine
 !-----------------------------!
-subroutine CodeBaseFCC(moveFCC)
+subroutine CodeBaseFCC(moveFCC,D,NNFCC)
 implicit none
+INTEGER                    :: D,NNFCC
 INTEGER                    :: i,j,res
 INTEGER,DIMENSION(D)       :: move
 INTEGER,DIMENSION(NNFCC,D) :: moveFCC
    j=0
    DO i=0,3**D-1
 
-      res=CodeBase(REAL(i,4),3,move)
+      res=CodeBase(REAL(i,4),3,move,D)
 
 !     write(*,*) 'moveA', i, move
-      if (CheckMoveFCC(move)) then
+      if (CheckMoveFCC(move,D)) then
          j=j+1
          moveFCC(j,:)=move
 !        write(*,*) 'moveB',i,  move
@@ -197,9 +196,9 @@ if (j .NE. NNFCC) STOP 'Problem in computing FCC near neighbours'
 return
 end subroutine
 
-logical Function CheckMoveFCC(move)
+logical Function CheckMoveFCC(move,D)
 implicit none
-INTEGER                   :: i,a,b
+INTEGER                   :: i,a,b,D
 INTEGER,DIMENSION(D)      :: move
 a = 0
 b = 0
@@ -220,10 +219,10 @@ end
 !Convert a number from base 10 to base b. The function returns
 !FALSE if b not in [2..36] or if string x contains invalid
 !characters in base 10 or if number x is too big
-integer Function CodeBase(x,b,out_vect)
+integer Function CodeBase(x,b,out_vect,D)
 implicit none
 real*4 x
-integer b, n
+integer b, n, D
 integer, dimension(D) :: out_vect
 character(30):: y
   CodeBase=0

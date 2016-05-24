@@ -9,7 +9,7 @@ cDD = int(sys.argv[1])
 
 varLIST=['m','n']
 
-S1 = 'INTEGER, parameter        :: D=' + str(cDD) + '! Spatial dimensions matrix RANK' 
+S1 = 'INTEGER                   :: D=' + str(cDD) + '! Spatial dimensions matrix RANK' 
 S2 = 'INTEGER, allocatable,dimension('
 for i in range(cDD-1):
     S2 = S2+':,'

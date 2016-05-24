@@ -1,66 +1,77 @@
 module GlobalMem
-INTEGER                            :: L ! Linear dimensions
-#include <define_array.h>
-INTEGER                            :: S ! Size of the vectorized domain
-INTEGER, allocatable, dimension(:) :: v
 
-CHARACTER (LEN=10)                 :: lattice
+type domain
+INTEGER                               :: L        ! Linear dimensions
+#include <define_array.h>
+INTEGER                               :: S        ! Size of the vectorized domain
+INTEGER, allocatable, dimension(:)    :: v
+CHARACTER (LEN=10)                    :: lattice
+INTEGER                               :: NN       ! number of near nieghbours
+INTEGER, allocatable, dimension(:,:)  :: vNN      ! matrix of vectorized nearneighbours
+end type domain
+
+type(domain)                       :: CA_dom1, prova(10,10)
 
 contains
 
-subroutine global_allocate()
-
+subroutine allocate_dom(CA_dom)
+implicit none
+type(domain)                       :: CA_dom
 ! local variable
 integer   :: i,j
+integer   :: L,S,D
 
-L=4
 
-lattice='FCC'
 
+D = CA_dom%D
+
+
+L = CA_dom%L
 #include <allocate_array.h>
 
 
-SELECT CASE (TRIM(lattice))
+SELECT CASE (TRIM(CA_dom%lattice))
 
    CASE('SC')
  
        write(*,*) 'SC'
 
-       S=L**D
+       CA_dom%S=CA_dom%L**CA_dom%D
 
-       allocate(v(S))
+       allocate(CA_dom%v(CA_dom%S))
 
-       FORALL (i=1:S) v(i) = i
+       FORALL (i=1:CA_dom%S) CA_dom%v(i) = i
 
-       m=UNPACK(v,m==m,m) ! D-dimensional matrix of indexes
+       CA_dom%m=UNPACK(CA_dom%v,CA_dom%m==CA_dom%m,CA_dom%m)! D-dimensional matrix of indexes
 
    CASE('FCC')
 
 
        write(*,*) 'FCC'
 
-       n = 0
+       CA_dom%n = 0
+       write(*,*) shape(CA_dom%n)
 
        do i=1,D
-          m = 0
-          do j=1,(L/2)*2,2
-             m=EOSHIFT(m,SHIFT= 1,BOUNDARY=1,DIM=i)
-             m=CSHIFT(m,SHIFT= 1,DIM=i)
+          CA_dom%m = 0
+          do j=1,floor(REAL(CA_dom%L)/2)*2,2
+             CA_dom%m=EOSHIFT(CA_dom%m,SHIFT= 1,BOUNDARY=1,DIM=i)
+             CA_dom%m=CSHIFT(CA_dom%m,SHIFT= 1,DIM=i)
           enddo
-          n = m + n 
+          CA_dom%n = CA_dom%m + CA_dom%n 
        enddo
 
-       n = mod(n,2)
+       CA_dom%n = mod(CA_dom%n,2)
 
-       S=SUM(n)
+       CA_dom%S=SUM(CA_dom%n)
 
-       allocate(v(S))
+       allocate(CA_dom%v(CA_dom%S))
 
-       FORALL (i=1:S) v(i) = i
+       FORALL (i=1:CA_dom%S) CA_dom%v(i) = i
 
-       m = UNPACK(v,n == 1,n) ! D-dimensional matrix of indexes
+       CA_dom%m = UNPACK(CA_dom%v,CA_dom%n == 1,CA_dom%n) ! D-dimensional matrix of indexes
 
-       write(*,*) 'm',m
+       write(*,*) 'm',CA_dom%m
 
    CASE DEFAULT
 
@@ -69,5 +80,15 @@ SELECT CASE (TRIM(lattice))
 END SELECT
 
 end subroutine
+subroutine deallocate_dom(CA_dom)
+implicit none
+type(domain)   :: CA_dom
+deallocate(CA_dom%m)
+deallocate(CA_dom%n)
+deallocate(CA_dom%v)
+deallocate(CA_dom%vNN)
+
+end subroutine
+
 
 end module
