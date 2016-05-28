@@ -127,9 +127,6 @@ type(domain)                       :: CA_dom
 
    allocate(CA_dom%vNN(CA_dom%S,CA_dom%NN))
       
-   FORALL (i=1:CA_dom%S) CA_dom%v(i) = i
-
-   CA_dom%m=UNPACK(CA_dom%v,CA_dom%m==CA_dom%m,CA_dom%m) ! D-dimensional matrix of indexes
    CA_dom%n=CA_dom%m
    DO i=1,6
      CA_dom%n=EOSHIFT(CA_dom%n,SHIFT= moveHC(i,1),BOUNDARY=0,DIM=1)

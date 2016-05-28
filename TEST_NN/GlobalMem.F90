@@ -4,29 +4,28 @@ type domain
 INTEGER                               :: L        ! Linear dimensions
 #include <define_array.h>
 INTEGER                               :: S        ! Size of the vectorized domain
-INTEGER, allocatable, dimension(:)    :: v
 CHARACTER (LEN=10)                    :: lattice
 INTEGER                               :: NN       ! number of near nieghbours
+INTEGER, allocatable, dimension(:,:)  :: v1DtoND  ! map of 1D to ND
 INTEGER, allocatable, dimension(:,:)  :: vNN      ! matrix of vectorized nearneighbours
 end type domain
 
-type(domain)                       :: CA_dom1, prova(10,10)
+type(domain)                       :: CA_dom1
 
 contains
 
 subroutine allocate_dom(CA_dom)
-implicit none
+
 type(domain)                       :: CA_dom
 ! local variable
 integer   :: i,j
-integer   :: L,S,D
-
+integer   :: L,D
+INTEGER, allocatable, dimension(:)    :: v        ! state_vector
 
 
 D = CA_dom%D
-
-
 L = CA_dom%L
+
 #include <allocate_array.h>
 
 
@@ -38,11 +37,11 @@ SELECT CASE (TRIM(CA_dom%lattice))
 
        CA_dom%S=CA_dom%L**CA_dom%D
 
-       allocate(CA_dom%v(CA_dom%S))
+       allocate(v(CA_dom%S))
 
-       FORALL (i=1:CA_dom%S) CA_dom%v(i) = i
+       FORALL (i=1:CA_dom%S) v(i) = i
 
-       CA_dom%m=UNPACK(CA_dom%v,CA_dom%m==CA_dom%m,CA_dom%m)! D-dimensional matrix of indexes
+       CA_dom%m=UNPACK(v,CA_dom%m==CA_dom%m,CA_dom%m)! D-dimensional matrix of indexes
 
    CASE('FCC')
 
@@ -54,7 +53,7 @@ SELECT CASE (TRIM(CA_dom%lattice))
 
        do i=1,D
           CA_dom%m = 0
-          do j=1,floor(REAL(CA_dom%L)/2)*2,2
+          do j=1,(CA_dom%L/2)*2,2
              CA_dom%m=EOSHIFT(CA_dom%m,SHIFT= 1,BOUNDARY=1,DIM=i)
              CA_dom%m=CSHIFT(CA_dom%m,SHIFT= 1,DIM=i)
           enddo
@@ -65,13 +64,12 @@ SELECT CASE (TRIM(CA_dom%lattice))
 
        CA_dom%S=SUM(CA_dom%n)
 
-       allocate(CA_dom%v(CA_dom%S))
+       allocate(v(CA_dom%S))
 
-       FORALL (i=1:CA_dom%S) CA_dom%v(i) = i
+       FORALL (i=1:CA_dom%S) v(i) = i
 
-       CA_dom%m = UNPACK(CA_dom%v,CA_dom%n == 1,CA_dom%n) ! D-dimensional matrix of indexes
+       CA_dom%m = UNPACK(v,CA_dom%n == 1,CA_dom%n) ! D-dimensional matrix of indexes
 
-       write(*,*) 'm',CA_dom%m
 
    CASE DEFAULT
 
@@ -79,13 +77,51 @@ SELECT CASE (TRIM(CA_dom%lattice))
 
 END SELECT
 
+! construct map between 1D world and ND world
+
+allocate(CA_dom%v1DtoND(CA_dom%S,D))
+
+do i=1,D
+   CA_dom%n = 0
+     do j=1,CA_dom%L
+        CA_dom%n=EOSHIFT(CA_dom%n,SHIFT= 1,BOUNDARY=j,DIM=i)
+     enddo
+   CA_dom%v1DtoND(:,i) =PACK(CA_dom%n,CA_dom%m>0)
+enddo
+
+
+deallocate(v)
+
 end subroutine
+
+subroutine dump_lattice(CA_dom)
+implicit none
+!local variables
+type(domain)   :: CA_dom
+integer        :: i,j
+character(len=1024)  :: filename
+character(len=1024)  :: cube_side
+
+write (cube_side, "(I3.3)") CA_dom%L
+filename =  TRIM(CA_dom%lattice)//TRIM(cube_side)//'.xyz'
+
+OPEN(UNIT=333,FILE=TRIM(filename),FORM="FORMATTED",STATUS="REPLACE",ACTION="WRITE")
+
+do i=1,CA_dom%S
+    write(unit=333,FMT=*) CA_dom%v1DtoND(i,:)
+enddo
+
+CLOSE(UNIT=333)
+
+end subroutine
+
 subroutine deallocate_dom(CA_dom)
 implicit none
 type(domain)   :: CA_dom
+
 deallocate(CA_dom%m)
 deallocate(CA_dom%n)
-deallocate(CA_dom%v)
+deallocate(CA_dom%v1DtoND)
 deallocate(CA_dom%vNN)
 
 end subroutine
