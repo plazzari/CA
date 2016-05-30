@@ -13,7 +13,7 @@ end type domain
 
 type(domain)                          :: CA_dom1
 REAL   , parameter                    :: PI=acos(-1.)
-REAL(4), allocatable, dimension(:,2)  :: examap
+REAL(4), allocatable, dimension(:,:)  :: examap
 LOGICAL, allocatable, dimension(:)    :: v_aux
 
 contains
@@ -118,7 +118,7 @@ OPEN(UNIT=333,FILE=TRIM(filename),FORM="FORMATTED",STATUS="REPLACE",ACTION="WRIT
 
 SELECT CASE (CA_dom%lattice)
 
-     CASE(HC)
+     CASE('HC')
          allocate(examap(CA_dom%S,2))
          allocate(v_aux(CA_dom%S))
          examap = 0.
@@ -127,7 +127,7 @@ SELECT CASE (CA_dom%lattice)
          do i=1,CA_dom%S
              write(unit=333,FMT=*) 'Au', examap(i,1),examap(i,2), CA_dom%v1DtoND(i,3:CA_dom%D)
          enddo
-     DEFAULT
+     CASE DEFAULT
          do i=1,CA_dom%S
              write(unit=333,FMT=*) 'Au', CA_dom%v1DtoND(i,:)
          enddo
@@ -149,23 +149,31 @@ deallocate(CA_dom%vNN)
 
 end subroutine
 
-subroutine create_exa(CA_dom,point0,x0,y0)
-integer    :: point0,point
+recursive subroutine create_exa(CA_dom,point0,x0,y0)
+implicit none
+type(domain)   :: CA_dom
+integer    :: i,point0,point
 real(4)    :: x0,y0
 real(4)    :: x,y
 
-if point0 .eq. 0 then
+if (point0 .eq. 0) then
    return
-elseif v_aux(point0) then
+elseif (v_aux(point0)) then
    return
 else
    v_aux(point0)    = .TRUE.
    examap(point0,1) = x0
    examap(point0,2) = y0
    do i =1,6
-        point = CA_dom&vNN(point0,i)
+        point = CA_dom%vNN(point0,i)
         x     = x0 + cos(-2*PI/6.*real(i-1) + 5./6. * PI )
         y     = y0 + sin(-2*PI/6.*real(i-1) + 5./6. * PI )
+       call create_exa(CA_dom,point,x,y)
+   enddo
+   do i =7,CA_dom%NN
+        point = CA_dom%vNN(point0,i)
+        x     = x0 
+        y     = y0 
        call create_exa(CA_dom,point,x,y)
    enddo
 endif
