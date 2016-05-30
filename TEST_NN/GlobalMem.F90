@@ -12,9 +12,9 @@ INTEGER, allocatable, dimension(:,:)  :: vNN      ! matrix of vectorized nearnei
 end type domain
 
 type(domain)                          :: CA_dom1
-
+REAL   , parameter                    :: PI=acos(-1.)
 REAL(4), allocatable, dimension(:,2)  :: examap
-INTEGER, allocatable, dimension(:)    :: v_aux
+LOGICAL, allocatable, dimension(:)    :: v_aux
 
 contains
 
@@ -108,22 +108,31 @@ integer        :: i,j
 character(len=1024)  :: filename
 character(len=1024)  :: cube_side
 
-SELECT CA_dom%lattice
-     CASE(HC)
-
-     DEFAULT
-END SELECT
-
-
 write (cube_side, "(I3.3)") CA_dom%L
 filename =  TRIM(CA_dom%lattice)//TRIM(cube_side)//'.xyz'
 
 OPEN(UNIT=333,FILE=TRIM(filename),FORM="FORMATTED",STATUS="REPLACE",ACTION="WRITE")
     write(unit=333,FMT=*) CA_dom%S
     write(unit=333,FMT=*)
-do i=1,CA_dom%S
-    write(unit=333,FMT=*) 'Au', CA_dom%v1DtoND(i,:)
-enddo
+
+
+SELECT CA_dom%lattice
+
+     CASE(HC)
+         allocate(examap(CA_dom%S,2))
+         allocate(v_aux(CA_dom%S))
+         examap = 0.
+         v_aux  = .FALSE
+         call create_exa(CA_dom,1,0.,0.)
+         do i=1,CA_dom%S
+             write(unit=333,FMT=*) 'Au', examap(i,1),examap(i,2), CA_dom%v1DtoND(i,3:CA_dom%D)
+         enddo
+     DEFAULT
+         do i=1,CA_dom%S
+             write(unit=333,FMT=*) 'Au', CA_dom%v1DtoND(i,:)
+         enddo
+
+END SELECT
 
 CLOSE(UNIT=333)
 
@@ -140,5 +149,26 @@ deallocate(CA_dom%vNN)
 
 end subroutine
 
+subroutine create_exa(CA_dom,point0,x0,y0)
+integer    :: point0,point
+real(4)    :: x0,y0
+real(4)    :: x,y
 
+if point0 .eq. 0 then
+   return
+elseif v_aux(point0) then
+   return
+else
+   v_aux(point0)    = .TRUE.
+   examap(point0,1) = x0
+   examap(point0,2) = y0
+   do i =1,6
+        point = CA_dom&vNN(point0,i)
+        x     = x0 + cos(-2*PI/6.*real(i-1) + 5./6. * PI )
+        y     = y0 + sin(-2*PI/6.*real(i-1) + 5./6. * PI )
+       call create_exa(CA_dom,point,x,y)
+   enddo
+endif
+
+end subroutine
 end module
