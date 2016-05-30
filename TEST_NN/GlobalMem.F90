@@ -5,6 +5,7 @@ INTEGER                               :: L        ! Linear dimensions
 #include <define_array.h>
 INTEGER                               :: S        ! Size of the vectorized domain
 CHARACTER (LEN=10)                    :: lattice
+LOGICAL                               :: shiftby1 ! Shift by 1 the lattice FCC 
 INTEGER                               :: NN       ! number of near nieghbours
 INTEGER, allocatable, dimension(:,:)  :: v1DtoND  ! map of 1D to ND
 INTEGER, allocatable, dimension(:,:)  :: vNN      ! matrix of vectorized nearneighbours
@@ -69,6 +70,8 @@ SELECT CASE (TRIM(CA_dom%lattice))
        FORALL (i=1:CA_dom%S) v(i) = i
 
        CA_dom%m = UNPACK(v,CA_dom%n == 1,CA_dom%n) ! D-dimensional matrix of indexes
+
+       if (CA_dom%shiftby1)  CA_dom%m = -CA_dom%m + 1 ! Zero cells became 1 and viceversa
 
 
    CASE DEFAULT

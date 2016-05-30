@@ -9,8 +9,9 @@ INTEGER                   :: i
 
 !TEST FCC--------------------
 
-CA_dom1%L=10
-CA_dom1%lattice='FCC'
+CA_dom1%L        = 10
+CA_dom1%lattice  = 'FCC'
+CA_dom1%shiftby1 = .FALSE.
 
 call allocate_dom(CA_dom1)
 
