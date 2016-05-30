@@ -65,7 +65,7 @@ call deallocate_dom(CA_dom1)
 write(*,*) 'Honeycomb'
 
 CA_dom1%L=7
-CA_dom1%lattice='SC'
+CA_dom1%lattice='HC'
 
 call allocate_dom(CA_dom1)
 

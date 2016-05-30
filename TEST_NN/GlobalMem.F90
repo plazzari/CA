@@ -11,7 +11,10 @@ INTEGER, allocatable, dimension(:,:)  :: v1DtoND  ! map of 1D to ND
 INTEGER, allocatable, dimension(:,:)  :: vNN      ! matrix of vectorized nearneighbours
 end type domain
 
-type(domain)                       :: CA_dom1
+type(domain)                          :: CA_dom1
+
+REAL(4), allocatable, dimension(:,2)  :: examap
+INTEGER, allocatable, dimension(:)    :: v_aux
 
 contains
 
@@ -32,7 +35,7 @@ L = CA_dom%L
 
 SELECT CASE (TRIM(CA_dom%lattice))
 
-   CASE('SC')
+   CASE('SC','HC')
  
        write(*,*) 'SC'
 
@@ -104,6 +107,13 @@ type(domain)   :: CA_dom
 integer        :: i,j
 character(len=1024)  :: filename
 character(len=1024)  :: cube_side
+
+SELECT CA_dom%lattice
+     CASE(HC)
+
+     DEFAULT
+END SELECT
+
 
 write (cube_side, "(I3.3)") CA_dom%L
 filename =  TRIM(CA_dom%lattice)//TRIM(cube_side)//'.xyz'
