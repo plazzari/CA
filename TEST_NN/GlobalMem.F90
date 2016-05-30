@@ -112,7 +112,7 @@ OPEN(UNIT=333,FILE=TRIM(filename),FORM="FORMATTED",STATUS="REPLACE",ACTION="WRIT
     write(unit=333,FMT=*) CA_dom%S
     write(unit=333,FMT=*)
 do i=1,CA_dom%S
-    write(unit=333,FMT=*) CA_dom%v1DtoND(i,:)
+    write(unit=333,FMT=*) 'Au', CA_dom%v1DtoND(i,:)
 enddo
 
 CLOSE(UNIT=333)
