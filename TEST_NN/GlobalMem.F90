@@ -109,7 +109,8 @@ write (cube_side, "(I3.3)") CA_dom%L
 filename =  TRIM(CA_dom%lattice)//TRIM(cube_side)//'.xyz'
 
 OPEN(UNIT=333,FILE=TRIM(filename),FORM="FORMATTED",STATUS="REPLACE",ACTION="WRITE")
-
+    write(unit=333,FMT=*) CA_dom%S
+    write(unit=333,FMT=*)
 do i=1,CA_dom%S
     write(unit=333,FMT=*) CA_dom%v1DtoND(i,:)
 enddo
