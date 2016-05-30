@@ -116,13 +116,13 @@ OPEN(UNIT=333,FILE=TRIM(filename),FORM="FORMATTED",STATUS="REPLACE",ACTION="WRIT
     write(unit=333,FMT=*)
 
 
-SELECT CA_dom%lattice
+SELECT CASE (CA_dom%lattice)
 
      CASE(HC)
          allocate(examap(CA_dom%S,2))
          allocate(v_aux(CA_dom%S))
          examap = 0.
-         v_aux  = .FALSE
+         v_aux  = .FALSE.
          call create_exa(CA_dom,1,0.,0.)
          do i=1,CA_dom%S
              write(unit=333,FMT=*) 'Au', examap(i,1),examap(i,2), CA_dom%v1DtoND(i,3:CA_dom%D)
